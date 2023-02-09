@@ -1,12 +1,14 @@
-import express from "express";
+import express, { response } from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import storage from "./memory_storage"
+
 import cors from "cors"
-import connect from "./db.js"
+
 /* import Post from "../models/Post" */
 import Exercise from "../models/Exercise";
-
+import User from "../models/User"
+import auth from "./auth"
+import bcrypt from "bcrypt"
 
 dotenv.config();
 try {
@@ -30,35 +32,12 @@ app.use(express.json());
 
 
 
-/* app.get("/posts", async (req, res) => {
-  let db = await connect()
-
-  let cursor = await db.collection("posts").find().sort({postedAt: -1})
-  let results = await cursor.toArray()
-
-  console.log(results)
-  res.json(results)
-}); */
-
-/* app.get("/posts", async (req, res) => {
-  try {
-    let exercises = await Exercise.find({});
-    res.send(exercises);
-  } catch (error) {
-    console.log(error);
-  }
+app.get("/tajna", [auth.verify], (req, res) => { 
+  res.json({ message: "Ovo je tajna " + req.jwt.user.email })
 });
- */
 
-app.get("/posts", async (req, res) => {
-/*   try {
-    const exercises = await Exercise.find({});
-    res.json(exercises);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error retrieving exercises." });
-  } */
 
+app.get("/posts", /* w */ async (req, res) => {
   Exercise.find({}, function (err, result){ // get all albums
     if (err) { // if there will be any error
       res.status(500).json({ err: "Error retrieving exercises." });
@@ -70,7 +49,7 @@ app.get("/posts", async (req, res) => {
 });
 
 
-app.post("/post/add", async (req, res) => {
+app.post("/post/add", /* [auth.verify], */ async (req, res) => {
   const { name, imageURL} = req.body;
 
 
@@ -93,7 +72,7 @@ app.post("/post/add", async (req, res) => {
   }
 });
 
-app.delete("/post/delete/:id", async (req, res) => {
+app.delete("/post/delete/:id", [auth.verify], async (req, res) => {
   try {
     const id = req.params.id;
     await Exercise.deleteOne({ _id: id });
@@ -103,10 +82,73 @@ app.delete("/post/delete/:id", async (req, res) => {
   }
 });
 
+app.post('/post/update', [auth.verify], async (req, res) => {
+  const { id, repValue, date } = req.body
 
+  const repetitions = [{
+    number: repValue,
+    date: date
+  }]
 
-app.get("/posts_memory", (req, res) => {
-  let postovi = storage.posts
-  res.json(postovi)
+  Exercise.findOneAndUpdate({ _id: id }, { $push: { repetitions: repetitions } }, { new: true }, (error, result) => {
+    if (error) return res.status(500).send(error);
+    return res.status(200).send({msg: "exercise updated", result});
+  });
+
 });
+
+app.post("/add/user", async (req, res) => {
+
+  let { firstname, lastname, email, password } = req.body;
+  let id;
+
+  try {
+    id = await auth.registerUser(firstname, lastname, email, password);
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+
+  res.json({ id: id });
+
+
+
+});
+
+app.post("/auth/user", async (req, res) => {
+
+    let user = req.body
+
+
+    try {
+      let result = await auth.authUser(user.email, user.password);
+      res.send(result)
+    } catch (error) {
+      res.status(403).json({ error: error.message })
+    }
+
+  });
+
+
+
+app.get("/users", async (req, res) => {
+  
+    User.find({}, function (err, result){ // get all albums
+      if (err) { // if there will be any error
+        res.status(500).json({ err: "Error retrieving exercises." });
+      } else { /// in success case in which records from DB is fetched
+        res.json(result);
+        //console.log(result)
+      }
+    });
+  });
+
+
+
+
+
 app.listen(port, () => console.log(`Slušam na portu ${port}!`));
+
+
+
+
+
