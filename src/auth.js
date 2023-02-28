@@ -50,6 +50,8 @@ export default {
       return {
         token,
         email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname,
       };
 
       /* console.log("TOČNO!") */
@@ -63,7 +65,7 @@ export default {
       let authorization = req.headers.authorization.split(" ");
       let type = authorization[0];
       let token = authorization[1];
-      console.log(token);
+      //console.log(token);
       if (type !== "Bearer") {
         return res.status(401).send();
 
@@ -75,4 +77,25 @@ export default {
       return res.status(401).send()
     }
   },
+
+  async changeUserPassword(new_password, old_password){
+  
+    let { user } = req.jwt
+    let newUser = await User.findOne({ _id: user._id });
+    if (newUser && user.password && (await bcrypt.compare(old_password, user.password))){
+      let new_password_hashed = await bcrypt.hash(new_password, 8)
+
+      let result = await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            password: new_password_hashed
+          }
+        }
+      )
+
+      return result.modifiedCount == 1
+
+    }
+  }
 };
