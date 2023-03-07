@@ -103,13 +103,13 @@ app.post("/post/update", [auth.verify], async (req, res) => {
 });
 
 
-app.patch("/user/edit", [auth.verify], async (res, req) => {
+app.patch("/user/edit", [auth.verify], async (req, res) => {
   let changes = req.body
-  console.log(changes)
+  console.log("changes: ", changes)
   /* let email = req.jwt */
 
   if (changes.new_password && changes.old_password){
-    let result = await auth.changeUserPassword(changes.new_password, changes.old_password)
+    let result = await auth.changeUserPassword(req, changes.new_password, changes.old_password, changes.imageURL)
     if (result) {
       res.status(201).send()
     }

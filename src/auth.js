@@ -78,7 +78,7 @@ export default {
     }
   },
 
-  async changeUserPassword(new_password, old_password){
+  async changeUserPassword(req, new_password, old_password, image){
   
     let { user } = req.jwt
     let newUser = await User.findOne({ _id: user._id });
@@ -89,7 +89,8 @@ export default {
         { _id: user._id },
         {
           $set: {
-            password: new_password_hashed
+            password: new_password_hashed,
+            imageURL:image
           }
         }
       )
