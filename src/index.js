@@ -10,6 +10,8 @@ import User from "../models/User";
 import auth from "./auth";
 import bcrypt from "bcrypt";
 
+
+
 dotenv.config();
 try {
   mongoose.set("strictQuery", false).connect(process.env.MONGO_URI, {
@@ -24,7 +26,11 @@ const app = express(); // instanciranje aplikacije
 const port = 3000; // port na kojem će web server slušati
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+
+
+
+
 
 app.get("/tajna", [auth.verify], (req, res) => {
   res.json({ message: "Ovo je tajna " + req.jwt.user.email });
@@ -103,7 +109,7 @@ app.post("/post/update", [auth.verify], async (req, res) => {
 });
 
 
-app.patch("/user/edit", [auth.verify], async (req, res) => {
+app.put("/user/edit", [auth.verify], async (req, res) => {
   let changes = req.body
   console.log("changes: ", changes)
   /* let email = req.jwt */
