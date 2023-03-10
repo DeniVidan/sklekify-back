@@ -27,8 +27,19 @@ export default {
     try {
       let result = await newUser.save();
       if (result && result.insertedId) {
-        return result.insertedId;
+        
+        let token = jwt.sign({ newUser }, process.env.JWT_SECRET, {
+        algorithm: "HS512",
+        expiresIn: "1 week",
+      });
+      
+      return {
+        token,
+        result: result.insertedId
+      };
       }
+      
+
     } catch (e) {
       throw new Error("Korisnik postoji!");
     }
