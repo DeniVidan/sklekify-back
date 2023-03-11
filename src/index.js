@@ -117,6 +117,44 @@ app.put("/user/edit", [auth.verify], async (req, res) => {
   if (changes.new_password && changes.old_password){
     let result = await auth.changeUserPassword(req, changes.new_password, changes.old_password, changes.imageURL)
     if (result) {
+      res.status(201).send({ msg: "succesfuly edited name" })
+    }
+    else {
+      res.status(500).json({ error: "cannot change password" })
+    }
+  }
+  else{
+    res.status(400).json({error: "krivi upit"})
+  }
+})
+
+app.put("/user/edit/fname", [auth.verify], async (req, res) => {
+  let changes = req.body
+  console.log("changes: ", changes)
+  /* let email = req.jwt */
+
+  if (changes.firstname){
+    let result = await auth.changeUserFname(req, changes.firstname, changes.lastname)
+    if (result) {
+      res.status(201).send()
+    }
+    else {
+      res.status(500).json({ error: "cannot change password" })
+    }
+  }
+  else{
+    res.status(400).json({error: "krivi upit"})
+  }
+})
+
+app.put("/user/edit/image", [auth.verify], async (req, res) => {
+  let changes = req.body
+  console.log("changes: ", changes)
+  /* let email = req.jwt */
+
+  if (changes.imageURL){
+    let result = await auth.changeUserImage(req, changes.imageURL)
+    if (result) {
       res.status(201).send()
     }
     else {
@@ -149,7 +187,8 @@ app.post("/auth/user", async (req, res) => {
     let result = await auth.authUser(user.email, user.password);
     res.send(result);
   } catch (error) {
-    res.status(403).json({ error: error.message });
+    res.status(403).send({ error: "Unable to verify" });
+    console.log(error.message)
   }
 });
 

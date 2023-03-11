@@ -65,7 +65,6 @@ export default {
         lastname: user.lastname,
       };
 
-      /* console.log("TOČNO!") */
     } else {
       throw new Error("Nemože autentificirati!");
     }
@@ -101,7 +100,7 @@ export default {
         {
           $set: {
             password: new_password_hashed,
-            imageURL:image
+            imageURL: image
           }
         }
       )
@@ -109,5 +108,48 @@ export default {
       return result.modifiedCount == 1
 
     }
+  },
+
+  async changeUserFname(req, newfirstname, newlastname) {
+    let { user } = req.jwt
+    let newUser = await User.findOne({ _id: user._id });
+
+    if (newfirstname != newUser.firstname || newlastname != newUser.lastname){
+      let result = await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            firstname: newfirstname,
+            lastname: newlastname
+          }
+        }
+      )
+      return result.modifiedCount == 1
+
+    } /* else {
+      return "nemože"
+    } */
+  },
+
+  async changeUserImage(req, newImage) {
+    let { user } = req.jwt
+    let newUser = await User.findOne({ _id: user._id });
+
+    if (newImage){
+      let result = await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            imageURL: newImage
+          }
+        }
+      )
+      return result.modifiedCount == 1
+
+    } /* else {
+      return "nemože"
+    } */
   }
+
+
 };
