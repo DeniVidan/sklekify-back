@@ -24,23 +24,21 @@ export default {
       password: await bcrypt.hash(password, 8),
     });
 
-    try {
-      let result = await newUser.save();
-      if (result && result.insertedId) {
-        
-        let token = jwt.sign({ newUser }, process.env.JWT_SECRET, {
+    let user = await newUser.save();
+
+    if (user) {
+      let token = jwt.sign({ user }, process.env.JWT_SECRET, {
         algorithm: "HS512",
         expiresIn: "1 week",
       });
-      
+
       return {
         token,
-        result: result.insertedId
+        email: newUser.email,
+        firstname: newUser.firstname,
+        lastname: newUser.lastname,
       };
-      }
-      
-
-    } catch (e) {
+    } else {
       throw new Error("Korisnik postoji!");
     }
   },
@@ -64,7 +62,6 @@ export default {
         firstname: user.firstname,
         lastname: user.lastname,
       };
-
     } else {
       throw new Error("Nemože autentificirati!");
     }
@@ -78,78 +75,75 @@ export default {
       //console.log(token);
       if (type !== "Bearer") {
         return res.status(401).send();
-
       } else {
         req.jwt = jwt.verify(token, process.env.JWT_SECRET);
-        return next()
+        return next();
       }
     } catch (error) {
-      return res.status(401).send()
+      return res.status(401).send();
     }
   },
 
-  async changeUserPassword(req, new_password, old_password, image){
-  
-    let { user } = req.jwt
+  async changeUserPassword(req, new_password, old_password, image) {
+    let { user } = req.jwt;
     let newUser = await User.findOne({ _id: user._id });
-    if (newUser && user.password && (await bcrypt.compare(old_password, user.password))){
-      let new_password_hashed = await bcrypt.hash(new_password, 8)
+    if (
+      newUser &&
+      user.password &&
+      (await bcrypt.compare(old_password, user.password))
+    ) {
+      let new_password_hashed = await bcrypt.hash(new_password, 8);
 
       let result = await User.updateOne(
         { _id: user._id },
         {
           $set: {
             password: new_password_hashed,
-            imageURL: image
-          }
+            imageURL: image,
+          },
         }
-      )
+      );
 
-      return result.modifiedCount == 1
-
+      return result.modifiedCount == 1;
     }
   },
 
   async changeUserFname(req, newfirstname, newlastname) {
-    let { user } = req.jwt
+    let { user } = req.jwt;
     let newUser = await User.findOne({ _id: user._id });
 
-    if (newfirstname != newUser.firstname || newlastname != newUser.lastname){
+    if (newfirstname != newUser.firstname || newlastname != newUser.lastname) {
       let result = await User.updateOne(
         { _id: user._id },
         {
           $set: {
             firstname: newfirstname,
-            lastname: newlastname
-          }
+            lastname: newlastname,
+          },
         }
-      )
-      return result.modifiedCount == 1
-
+      );
+      return result.modifiedCount == 1;
     } /* else {
       return "nemože"
     } */
   },
 
   async changeUserImage(req, newImage) {
-    let { user } = req.jwt
+    let { user } = req.jwt;
     let newUser = await User.findOne({ _id: user._id });
 
-    if (newImage){
+    if (newImage) {
       let result = await User.updateOne(
         { _id: user._id },
         {
           $set: {
-            imageURL: newImage
-          }
+            imageURL: newImage,
+          },
         }
-      )
-      return result.modifiedCount == 1
-
+      );
+      return result.modifiedCount == 1;
     } /* else {
       return "nemože"
     } */
-  }
-
-
+  },
 };

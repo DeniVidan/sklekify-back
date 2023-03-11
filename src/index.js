@@ -38,8 +38,8 @@ app.get("/tajna", [auth.verify], (req, res) => {
 
 app.get("/posts", [auth.verify], async (req, res) => {
   const { user } = req.jwt;
-  
-  console.log(req.jwt);
+
+
   Exercise.find({ user: user._id }, function (err, result) {
     // get all albums
     if (err) {
@@ -169,15 +169,14 @@ app.put("/user/edit/image", [auth.verify], async (req, res) => {
 
 app.post("/add/user", async (req, res) => {
   let { firstname, lastname, email, password } = req.body;
-  let id;
 
   try {
-    id = await auth.registerUser(firstname, lastname, email, password);
+    let result = await auth.registerUser(firstname, lastname, email, password);
+    res.send(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).send({ error: "User with this email already exisits" });
   }
 
-  res.json({ id: id });
 });
 
 app.post("/auth/user", async (req, res) => {
@@ -187,7 +186,7 @@ app.post("/auth/user", async (req, res) => {
     let result = await auth.authUser(user.email, user.password);
     res.send(result);
   } catch (error) {
-    res.status(403).send({ error: "Unable to verify" });
+    res.status(403).send({ error: "Entered email and password do not match!" });
     console.log(error.message)
   }
 });
