@@ -197,7 +197,7 @@ app.get("/users", [auth.verify],  async (req, res) => {
     // get all albums
     if (newUser) {
       // if there will be any error
-      res.json(newUser);
+      res.send(newUser);
       console.log("usserr gettt: ", newUser)
     } else {
       /// in success case in which records from DB is fetched
@@ -208,22 +208,24 @@ app.get("/users", [auth.verify],  async (req, res) => {
   
 });
 
-/* app.patch("/user/update", [auth.verify],  async (req, res) => {
-  let { user } = req.jwt
-  let newUser = await User.findOne({_id: user._id});
+
+app.get("/exercise/data", [auth.verify], async (req, res) => {
+  const { user } = req.jwt;
+
+
+  Exercise.find({ user: user._id }, function (err, result) {
     // get all albums
-    if (newUser) {
+    if (err) {
       // if there will be any error
-      res.json(newUser);
-      console.log("usserr gettt: ", newUser)
+      res.status(500).json({ err: "Error retrieving exercises." });
     } else {
       /// in success case in which records from DB is fetched
-      
-      res.status(500).json("Error retrieving user.");
-      
+      res.json(result);
+      //console.log(result)
     }
-  
+  });
 });
- */
+
+
 
 app.listen(port, () => console.log(`Slušam na portu ${port}!`));
