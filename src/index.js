@@ -186,7 +186,7 @@ app.post("/auth/user", async (req, res) => {
     let result = await auth.authUser(user.email, user.password);
     res.send(result);
   } catch (error) {
-    res.status(403).send({ error: "Entered email and password do not match!" });
+    res.status(403).send(error);
     console.log(error.message)
   }
 });
