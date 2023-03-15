@@ -117,7 +117,7 @@ app.put("/user/edit", [auth.verify], async (req, res) => {
   if (changes.new_password && changes.old_password){
     let result = await auth.changeUserPassword(req, changes.new_password, changes.old_password, changes.imageURL)
     if (result) {
-      res.status(201).send({ msg: "succesfuly edited name" })
+      res.status(201).send({ msg: "succesfuly edited password" })
     }
     else {
       res.status(500).json({ error: "cannot change password" })
@@ -139,7 +139,7 @@ app.put("/user/edit/fname", [auth.verify], async (req, res) => {
       res.status(201).send()
     }
     else {
-      res.status(500).json({ error: "cannot change password" })
+      res.status(500).json({ error: "cannot change name" })
     }
   }
   else{
@@ -158,7 +158,7 @@ app.put("/user/edit/image", [auth.verify], async (req, res) => {
       res.status(201).send()
     }
     else {
-      res.status(500).json({ error: "cannot change password" })
+      res.status(500).json({ error: "cannot change image" })
     }
   }
   else{
