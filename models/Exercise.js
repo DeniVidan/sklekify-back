@@ -13,11 +13,8 @@ const exerciseSchema = new mongoose.Schema({
         required: false,
         default: 0,
       },
-      date: {
-        type: Date,
-        
-      },
     },
+    
   ],
 
   imageURL: {
@@ -32,7 +29,9 @@ const exerciseSchema = new mongoose.Schema({
     ref: "user",
     required: true,
   }
-});
+},
+{ timestamps: true }
+);
 
 const Exercise = mongoose.model("exercise", exerciseSchema);
 export default Exercise;

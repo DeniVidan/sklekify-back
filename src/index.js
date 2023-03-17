@@ -10,8 +10,6 @@ import User from "../models/User";
 import auth from "./auth";
 import bcrypt from "bcrypt";
 
-
-
 dotenv.config();
 try {
   mongoose.set("strictQuery", false).connect(process.env.MONGO_URI, {
@@ -28,17 +26,12 @@ const port = process.env.PORT; // port na kojem će web server slušati
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-
-
-
-
 app.get("/tajna", [auth.verify], (req, res) => {
   res.json({ message: "Ovo je tajna " + req.jwt.user.email });
 });
 
 app.get("/posts", [auth.verify], async (req, res) => {
   const { user } = req.jwt;
-
 
   Exercise.find({ user: user._id }, function (err, result) {
     // get all albums
@@ -93,13 +86,15 @@ app.post("/post/update", [auth.verify], async (req, res) => {
   const repetitions = [
     {
       number: repValue,
-      date: date,
     },
   ];
 
   Exercise.findOneAndUpdate(
     { _id: id },
-    { $push: { repetitions: repetitions } },
+    {
+      /* $pop: { repetitions: 1 }, */
+      $push: { repetitions: repetitions },
+    },
     { new: true },
     (error, result) => {
       if (error) return res.status(500).send(error);
@@ -107,65 +102,93 @@ app.post("/post/update", [auth.verify], async (req, res) => {
     }
   );
 });
+app.post("/post/overwrite", [auth.verify], async (req, res) => {
+  try {
+    const { id, repValue } = req.body;
+    let arr = [];
+    const repetitions = [
+      {
+        number: repValue,
+      },
+    ];
+    let proba = await Exercise.findOne({ _id: id });
+    arr = proba.repetitions;
+    arr[arr.length - 1].number = repValue;
+    console.log("ispisi novu overwrite: ", arr);
 
+    let result = await Exercise.updateOne(
+      { _id: id },
+      { $set: { repetitions: arr } }
+    );
+    arr = [];
+
+    return res.status(200).send({ msg: "exercise updated", result: "updatedExercise" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send(error);
+  }
+  
+});
 
 app.put("/user/edit", [auth.verify], async (req, res) => {
-  let changes = req.body
-  console.log("changes: ", changes)
+  let changes = req.body;
+  console.log("changes: ", changes);
   /* let email = req.jwt */
 
-  if (changes.new_password && changes.old_password){
-    let result = await auth.changeUserPassword(req, changes.new_password, changes.old_password, changes.imageURL)
+  if (changes.new_password && changes.old_password) {
+    let result = await auth.changeUserPassword(
+      req,
+      changes.new_password,
+      changes.old_password,
+      changes.imageURL
+    );
     if (result) {
-      res.status(201).send({ msg: "succesfuly edited password" })
+      res.status(201).send({ msg: "succesfuly edited password" });
+    } else {
+      res.status(500).json({ error: "cannot change password" });
     }
-    else {
-      res.status(500).json({ error: "cannot change password" })
-    }
+  } else {
+    res.status(400).json({ error: "krivi upit" });
   }
-  else{
-    res.status(400).json({error: "krivi upit"})
-  }
-})
+});
 
 app.put("/user/edit/fname", [auth.verify], async (req, res) => {
-  let changes = req.body
-  console.log("changes: ", changes)
+  let changes = req.body;
+  console.log("changes: ", changes);
   /* let email = req.jwt */
 
-  if (changes.firstname){
-    let result = await auth.changeUserFname(req, changes.firstname, changes.lastname)
+  if (changes.firstname) {
+    let result = await auth.changeUserFname(
+      req,
+      changes.firstname,
+      changes.lastname
+    );
     if (result) {
-      res.status(201).send()
+      res.status(201).send();
+    } else {
+      res.status(500).json({ error: "cannot change name" });
     }
-    else {
-      res.status(500).json({ error: "cannot change name" })
-    }
+  } else {
+    res.status(400).json({ error: "krivi upit" });
   }
-  else{
-    res.status(400).json({error: "krivi upit"})
-  }
-})
+});
 
 app.put("/user/edit/image", [auth.verify], async (req, res) => {
-  let changes = req.body
-  console.log("changes: ", changes)
+  let changes = req.body;
+  console.log("changes: ", changes);
   /* let email = req.jwt */
 
-  if (changes.imageURL){
-    let result = await auth.changeUserImage(req, changes.imageURL)
+  if (changes.imageURL) {
+    let result = await auth.changeUserImage(req, changes.imageURL);
     if (result) {
-      res.status(201).send()
+      res.status(201).send();
+    } else {
+      res.status(500).json({ error: "cannot change image" });
     }
-    else {
-      res.status(500).json({ error: "cannot change image" })
-    }
+  } else {
+    res.status(400).json({ error: "krivi upit" });
   }
-  else{
-    res.status(400).json({error: "krivi upit"})
-  }
-})
-
+});
 
 app.post("/add/user", async (req, res) => {
   let { firstname, lastname, email, password } = req.body;
@@ -176,7 +199,6 @@ app.post("/add/user", async (req, res) => {
   } catch (error) {
     res.status(500).send({ error: "User with this email already exisits" });
   }
-
 });
 
 app.post("/auth/user", async (req, res) => {
@@ -187,31 +209,27 @@ app.post("/auth/user", async (req, res) => {
     res.send(result);
   } catch (error) {
     res.status(403).send(error);
-    console.log(error.message)
+    console.log(error.message);
   }
 });
 
-app.get("/users", [auth.verify],  async (req, res) => {
-  let { user } = req.jwt
-  let newUser = await User.findOne({_id: user._id});
-    // get all albums
-    if (newUser) {
-      // if there will be any error
-      res.send(newUser);
-      console.log("usserr gettt: ", newUser)
-    } else {
-      /// in success case in which records from DB is fetched
-      
-      res.status(500).json("Error retrieving user.");
-      
-    }
-  
-});
+app.get("/users", [auth.verify], async (req, res) => {
+  let { user } = req.jwt;
+  let newUser = await User.findOne({ _id: user._id });
+  // get all albums
+  if (newUser) {
+    // if there will be any error
+    res.send(newUser);
+    console.log("usserr gettt: ", newUser);
+  } else {
+    /// in success case in which records from DB is fetched
 
+    res.status(500).json("Error retrieving user.");
+  }
+});
 
 app.get("/exercise/data", [auth.verify], async (req, res) => {
   const { user } = req.jwt;
-
 
   Exercise.find({ user: user._id }, function (err, result) {
     // get all albums
@@ -225,7 +243,5 @@ app.get("/exercise/data", [auth.verify], async (req, res) => {
     }
   });
 });
-
-
 
 app.listen(port, () => console.log(`Slušam na portu ${port}!`));
