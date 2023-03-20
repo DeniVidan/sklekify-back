@@ -140,7 +140,6 @@ app.put("/user/edit", [auth.verify], async (req, res) => {
       req,
       changes.new_password,
       changes.old_password,
-      changes.imageURL
     );
     if (result) {
       res.status(201).send({ msg: "succesfuly edited password" });
